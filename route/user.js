@@ -1,7 +1,7 @@
 import express from 'express'
 
 import { checkauth } from "../middlewear/auth.js"
-import { AddComment, AddPost, AddReviewAndRating, ApplyToUniversity, CompareUniversity, GetBanner, GetComment, GetCountryByRegionId, GetCourseByCatId, GetMyAppliedApplication, GetPosts, GetRegion, GetReviewAndRatingByUniversityId, GetTopEngineering, GetTopMbbs, GetTopUniversity, GetUniversity, GetUniversityByCategory, GetUniversityByCountry, GetUniversityById, OtpVerify, PopularCountry, RegisterUser, UserLogin, getCategories, temp } from '../controller/user.js'
+import { AddComment, AddPost, AddReviewAndRating, ApplyToUniversity, CompareUniversity, GetBanner, GetComment, GetCountryByRegionId, GetCourseByCatId, GetMyAppliedApplication, GetPosts, GetRegion, GetReviewAndRatingByUniversityId, GetTopEngineering, GetTopMbbs, GetTopUniversity, GetUniversity, GetUniversityByCategory, GetUniversityByCountry, GetUniversityById, LikePost, OtpVerify, PopularCountry, RegisterUser, UserLogin, getCategories, temp } from '../controller/user.js'
 
 
 
@@ -54,6 +54,7 @@ user_route.get("/get_comment",checkauth,GetComment)
 
 user_route.get("/get_course",checkauth,GetCourseByCatId)
 user_route.get("/get_region",checkauth,GetRegion)
+user_route.post("/add_like",checkauth,LikePost)
 user_route.get("/temp",temp)
 
 export default user_route

@@ -27,7 +27,11 @@ const CommunitySchema = new mongoose.Schema({
         type:mongoose.Schema.Types.ObjectId,
         ref:"comment"
     }
-  ]
+  ],
+  liked_by:[{
+    type:mongoose.Schema.Types.ObjectId,
+    ref:"user"
+  }]
 
 
 

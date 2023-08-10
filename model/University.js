@@ -87,10 +87,10 @@ const UniversitySchema = new mongoose.Schema({
         type:String
     },
     fee_per_year:{
-        type:String
+        type:Number
     },
     total_fee:{
-        type:String
+        type:Number
     },
     world_rank:{
         type:String

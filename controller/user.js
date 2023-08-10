@@ -333,28 +333,132 @@ export const GetUniversity = async(req,res)=>{
         const category = req.query.category
         const region = req.query.region
         const course = req.query.course
-        
+        const country = req.query.country
+        const fee = req.query.fees
+        const searchquery = req.query.searchquery
 
 
+        if(searchquery){
 
+           let userpattern = RegExp("^"+req.query.searchquery);
 
-        if(!category || !region || !course){
-          const university = await universityModel.find()
+           if(searchquery==""){
+            const university = await universityModel.find()
+            return res.status(200).json({
+              university:university
+            })
+           }
 
+          const university = await universityModel.find({name:{$regex:userpattern,$options:'i'}})
           return res.status(200).json({
             university:university
           })
+
         }else{
-          const university = await universityModel.find({$and:[{category:category},{region:region},{
-            course: { $in: course }
-          }]})
-
-          return res.status(200).json({
-            university:university
-          })
-
-
+          if(!category || !region || !course || !country ||!fee){
+            const university = await universityModel.find()
+  
+            return res.status(200).json({
+              university:university
+            })
+          }else{
+  
+            console.log(fee)
+            
+  
+             if(fee=="lessthan10lakh"){
+              const minFee = 0;
+              const maxFee = 1000000;
+  
+              
+  
+  
+  
+              
+  
+              const university = await universityModel.find({$and:[{category:category},{region:region},{country:country},{ total_fee: { $gte: minFee, $lte: maxFee } },{
+                course: { $in: course }
+              }]})
+    
+              return res.status(200).json({
+                university:university
+              })
+             }
+  
+  
+             if(fee=="10to15lakh"){
+              const minFee = 1000000;
+              const maxFee = 1500000;
+  
+              
+  
+              const university = await universityModel.find({$and:[{category:category},{region:region},{country:country},{ total_fee: { $gte: minFee, $lte: maxFee } },{
+                course: { $in: course }
+              }]})
+    
+              return res.status(200).json({
+                university:university
+              })
+             }
+  
+             if(fee=="15to20lakh"){
+              const minFee = 1500000;
+              const maxFee = 2000000;
+  
+              
+  
+              const university = await universityModel.find({$and:[{category:category},{region:region},{country:country},{ total_fee: { $gte: minFee, $lte: maxFee } },{
+                course: { $in: course }
+              }]})
+    
+              return res.status(200).json({
+                university:university
+              })
+             }
+  
+             if(fee=="20to25lakh"){
+              const minFee = 2000000;
+              const maxFee = 2500000;
+  
+              
+  
+              const university = await universityModel.find({$and:[{category:category},{region:region},{country:country},{ total_fee: { $gte: minFee, $lte: maxFee } },{
+                course: { $in: course }
+              }]})
+    
+              return res.status(200).json({
+                university:university
+              })
+             }
+  
+             if(fee=="morethan25lakh"){
+              const minFee = 2500000;
+              const maxFee = 90000000;
+  
+              
+  
+              const university = await universityModel.find({$and:[{category:category},{region:region},{country:country},{ total_fee: { $gte: minFee, $lte: maxFee } },{
+                course: { $in: course }
+              }]})
+    
+              return res.status(200).json({
+                university:university
+              })
+             }
+  
+  
+  
+           
+  
+  
+          }
+          
         }
+
+
+
+
+        
 
 
 
@@ -1481,8 +1585,63 @@ export const GetCountryByRegionId = async(req,res)=>{
          
        const s =  await countryModel.find({region:region});
         return res.status(200).json({
-          region:s
+          country:s
         })
+
+
+     }else{
+          return res.status(401).json({
+              message:"Anauthorize request"
+          })
+     }
+
+    
+
+      
+  } catch (error) {
+      return res.status(500).json({
+          message:"Internal server error"+error
+      })
+  }
+
+}
+
+
+
+
+export const LikePost = async(req,res)=>{
+ 
+  try {
+
+     let token = req.userinfo
+     if(token.user_type == 2){
+
+
+      const post_id = req.body.post_id
+
+      if(!post_id){
+        return res.status(200).json({
+          message:"post id is required"
+        })
+      }
+
+      const checkifalreadylike = await communtityModel.findOne({ _id: post_id, liked_by: { $in: [req.userinfo._id] } })
+
+      if(checkifalreadylike){
+        return res.status(400).json({
+          message:"already liked"
+        })
+      }else{
+        const data = await communtityModel.findByIdAndUpdate(post_id, { $push: { liked_by: req.userinfo._id }})
+        console.log(data)
+        let like = data.post_likes
+        like++
+        await communtityModel.findByIdAndUpdate({_id:post_id},{post_likes:like})
+
+        return res.status(200).json({
+          message:"like added"
+        })
+      }
 
 
      }else{
