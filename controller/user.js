@@ -18,6 +18,7 @@ import fs from 'fs'
 import countryModel from "../model/Country.js";
 import courseModel from "../model/Course.js";
 import regionModel from "../model/Region.js";
+import testimonialModel from "../model/Testimonial.js";
 
 
 
@@ -231,7 +232,7 @@ export const UserLogin = async(req,res)=>{
 
    }else{
       return res.status(400).json({
-          message:"Invalid user"
+          message:"No user found with this phone number"
       })
    }
 
@@ -1642,6 +1643,105 @@ export const LikePost = async(req,res)=>{
           message:"like added"
         })
       }
+
+
+     }else{
+          return res.status(401).json({
+              message:"Anauthorize request"
+          })
+     }
+
+    
+
+      
+  } catch (error) {
+      return res.status(500).json({
+          message:"Internal server error"+error
+      })
+  }
+
+}
+
+export const AddTestimonial = async(req,res)=>{
+ 
+  try {
+
+     let token = req.userinfo
+     if(token.user_type == 2){
+
+
+      const university_id = req.body.university_id
+      const desc = req.body.desc
+
+      if(!university_id || !desc){
+        return res.status(200).json({
+          message:"invalid request"
+        })
+      }
+
+
+
+        const addtestimonial = new testimonialModel({
+
+          user:req.userinfo._id,
+          university:university_id,
+          desc:desc
+            
+        })
+
+        await addtestimonial.save()
+
+        return res.status(201).json({
+          message:"testimonial added"
+        })
+
+    
+
+
+     }else{
+          return res.status(401).json({
+              message:"Anauthorize request"
+          })
+     }
+
+    
+
+      
+  } catch (error) {
+      return res.status(500).json({
+          message:"Internal server error"+error
+      })
+  }
+
+}
+
+export const GetTestimonialByUniversityId = async(req,res)=>{
+ 
+  try {
+
+     let token = req.userinfo
+     if(token.user_type == 2){
+
+
+      const university_id = req.body.university_id
+      
+
+      if(!university_id){
+        return res.status(200).json({
+          message:"invalid request"
+        })
+      }
+
+
+
+        const testimonial = new testimonialModel.find({university:university_id})
+      
+
+        return res.status(201).json({
+          testimonial:testimonial
+        })
+
+    
 
 
      }else{
