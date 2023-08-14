@@ -20,6 +20,9 @@ import courseModel from "../model/Course.js";
 import regionModel from "../model/Region.js";
 import testimonialModel from "../model/Testimonial.js";
 
+import chatroomModel from "../model/ChatRoom.js";
+import discussionModel from "../model/Discussion.js";
+
 
 
 
@@ -41,8 +44,12 @@ export const RegisterUser = async(req,res)=>{
     const dob = req.body.dob
    
     const university_name = req.body.university_name
-    const tweleve_per = req.body.tweleve_per
+    const tweleve_per = req.body.twelve_per
     const course_name = req.body.course_name
+    const device_token = req.body.device_token
+
+
+    console.log(tweleve_per)
 
 
     if(!phone){
@@ -75,11 +82,7 @@ export const RegisterUser = async(req,res)=>{
       })
     }
 
-    if(!aadhar){
-      return res.status(400).json({
-        message:"aadhar is required"
-      })
-    }
+   
 
     if(!citizenShip){
       return res.status(400).json({
@@ -106,6 +109,13 @@ export const RegisterUser = async(req,res)=>{
       })
     }
 
+    if(!device_token){
+      return res.status(400).json({
+        message:"device token is required"
+      })
+    }
+
+
 
 
     //check if already exist
@@ -131,10 +141,12 @@ export const RegisterUser = async(req,res)=>{
         student_type:student_type,
         gender:gender,
         dob:dob,
+
         university_name:university_name,
         tweleve_percentage:tweleve_per,
         course_name:course_name,
-        user_type:2
+        user_type:2,
+        notification_token:device_token
 
       })
 
@@ -1301,6 +1313,61 @@ export const getCategories = async(req,res)=>{
 }
 
 
+export const getCategoryById = async(req,res)=>{
+  try {
+
+
+      let token = req.userinfo
+      console.log(token)
+      if(token.admin_type == 1){
+          
+
+        const cat_id = req.query.cat_id
+
+
+        if(!cat_id){
+          return res.status(400).json({
+            message:"cat id is required"
+          })
+        }
+
+        const find_cat = await categoryModel.findById({_id:cat_id})
+
+        return res.status(200).json({
+          "_id": find_cat._id,
+          "name": find_cat.name,
+          "category_image": find_cat.category_image,
+          "createdAt": find_cat.createdAt,
+          "updatedAt": find_cat.updatedAt,
+          "__v": 0
+        })
+
+     
+     
+        
+        
+     
+
+      }else{
+          return res.status(401).json({
+              message:"Anauthorize request"
+          })
+      }
+
+ 
+
+      
+  } catch (error) {
+
+
+
+      
+      return res.status(500).json({
+          message:"Internal server error"
+      })
+  }
+}
+
 export const temp = async(req,res)=>{
 
 
@@ -1723,7 +1790,7 @@ export const GetTestimonialByUniversityId = async(req,res)=>{
      if(token.user_type == 2){
 
 
-      const university_id = req.body.university_id
+      const university_id = req.query.university_id
       
 
       if(!university_id){
@@ -1734,7 +1801,7 @@ export const GetTestimonialByUniversityId = async(req,res)=>{
 
 
 
-        const testimonial = new testimonialModel.find({university:university_id})
+        const testimonial =  await testimonialModel.find({university:university_id}).populate('user')
       
 
         return res.status(201).json({
@@ -1749,6 +1816,469 @@ export const GetTestimonialByUniversityId = async(req,res)=>{
               message:"Anauthorize request"
           })
      }
+
+    
+
+      
+  } catch (error) {
+      return res.status(500).json({
+          message:"Internal server error"+error
+      })
+  }
+
+}
+
+
+export const GetProfile = async(req,res)=>{
+ 
+  try {
+
+     let token = req.userinfo
+     if(token.user_type == 2){
+
+
+      
+
+
+
+        const user = await userModel.findById({_id:req.userinfo._id})
+      
+
+        return res.status(201).json({
+          user:user
+        })
+
+    
+
+
+     }else{
+          return res.status(401).json({
+              message:"Anauthorize request"
+          })
+     }
+
+    
+
+      
+  } catch (error) {
+      return res.status(500).json({
+          message:"Internal server error"+error
+      })
+  }
+
+}
+
+export const UpdateProfilePhoto = async(req,res)=>{
+ 
+  try {
+
+     let token = req.userinfo
+     if(token.user_type == 2){
+
+      const photo = req.files.photo
+
+      if(photo==null || photo==undefined){
+
+        return res.status(400).json({
+          message:"photo is required"
+        })
+      }
+
+
+      const randome_name = Date.now() + '-'+photo.name
+      const newpath =  path.join(process.cwd(),'user_photo',randome_name)
+      await photo.mv(newpath)
+
+
+
+      await userModel.findByIdAndUpdate({_id:req.userinfo._id},{profile_photo:randome_name})
+  
+
+       return res.status(200).json({
+          message:"profile photo updated"
+        })
+
+    
+
+
+     }else{
+          return res.status(401).json({
+              message:"Anauthorize request"
+          })
+     }
+
+    
+
+      
+  } catch (error) {
+      return res.status(500).json({
+          message:"Internal server error"+error
+      })
+  }
+
+}
+
+
+export const UpdateUserProfile = async(req,res)=>{
+
+  try {
+
+    const phone = req.body.phone
+    const name = req.body.name
+    const address = req.body.address
+    const state = req.body.state
+    const email = req.body.email
+    const alternatePhone = req.body.alternatePhone
+  
+    const citizenShip = req.body.citizenShip
+    const passport_number = req.body.passport_number
+    const gender = req.body.gender
+    const dob = req.body.dob
+    const tweleve_per = req.body.twelve_per
+    const neet_score = req.body.neet_score
+ 
+
+    console.log(tweleve_per)
+
+
+    if(!phone){
+      return res.status(400).json({
+        message:"phone is required"
+      })
+    }
+
+    if(!address){
+      return res.status(400).json({
+        message:"address is required"
+      })
+    }
+
+    if(!name){
+      return res.status(400).json({
+        message:"name is required"
+      })
+    }
+
+    if(!state){
+      return res.status(400).json({
+        message:"state is required"
+      })
+    }
+
+    if(!email){
+      return res.status(400).json({
+        message:"email is required"
+      })
+    }
+
+   
+
+    if(!citizenShip){
+      return res.status(400).json({
+        message:"citizenShip is required"
+      })
+    }
+
+    
+ 
+
+    if(!gender){
+      return res.status(400).json({
+        message:"gender is required"
+      })
+    }
+
+    if(!dob){
+      return res.status(400).json({
+        message:"dob is required"
+      })
+    }
+
+
+    await userModel.findByIdAndUpdate({_id:req.userinfo._id},{name:name,phone:phone,email:email,address:address,citizenShip:citizenShip,passport_number:passport_number,state:state,alternatePhone:alternatePhone,tweleve_percentage:tweleve_per,neet_score:neet_score,dob:dob,gender:gender})
+
+    return res.status(200).json({
+      message:"profile updated"
+    })
+    
+
+  
+
+     
+
+
+
+
+
+
+
+    
+    
+
+    
+    
+  } catch (error) {
+    return res.status(500).json({
+        message:"Internal server error"
+    })
+  }
+
+
+}
+
+
+export const GetMyCounselor = async(req,res)=>{
+ 
+  try {
+
+     let token = req.userinfo
+     if(token.user_type == 2){
+
+
+      
+
+
+
+        const counselor = await userModel.findOne({$and:[{isActive:true},{user_type:3}]})
+
+      
+
+        return res.status(201).json({
+          counselor:counselor
+        })
+
+    
+
+
+     }else{
+          return res.status(401).json({
+              message:"Anauthorize request"
+          })
+     }
+
+    
+
+      
+  } catch (error) {
+      return res.status(500).json({
+          message:"Internal server error"+error
+      })
+  }
+
+}
+
+
+
+
+export const SendMessage = async(req,res)=>{
+ 
+  try {
+
+      let token = req.userinfo
+      if(token.user_type == 2){
+
+
+
+          const sender_id = req.userinfo._id
+          const reciever_id = req.body.reciever_id
+          const message = req.body.message
+
+          
+          if(!sender_id || !reciever_id || !message){
+              return res.status(400).json({
+                  message:"invalid request"
+              })
+          }
+
+          let room_id = ""
+
+          //check room if not then create
+
+          const check_room = await chatroomModel.findOne({$and:[{created_by:sender_id},{created_with:reciever_id}]})
+
+          if(check_room!=null){
+              room_id = check_room._id
+          }
+
+          
+          const check_room2 = await chatroomModel.findOne({$and:[{created_by:reciever_id},{created_with:sender_id}]})
+
+          if(check_room2 !=null){
+              room_id = check_room2._id
+          }
+
+
+          if(check_room==null && check_room2==null){
+              //proceed
+
+
+              const createroom = new chatroomModel({
+                  created_by:sender_id,
+                  created_with:reciever_id
+              })
+             const room =  await createroom.save()
+
+
+              const newmessage = new discussionModel({
+                  from:sender_id,
+                  to:reciever_id,
+                  message:message,
+                  chat_room_id:room._id
+              })
+
+              await newmessage.save()
+
+              return res.status(201).json({
+                  message:"message sent"
+              })
+
+            
+
+
+
+          }
+
+         
+          const newmessage = new discussionModel({
+              from:sender_id,
+              to:reciever_id,
+              message:message,
+              chat_room_id:room_id
+          })
+
+          await newmessage.save()
+
+          return res.status(201).json({
+              message:"message sent"
+          })
+          
+
+
+
+
+
+          
+          
+
+          
+
+
+
+
+        
+
+
+          
+
+   }else{
+          return res.status(401).json({
+              message:"Anauthorize request"
+          })
+      }
+
+    
+
+      
+  } catch (error) {
+      return res.status(500).json({
+          message:"Internal server error"+error
+      })
+  }
+
+}
+
+
+export const GetMessages = async(req,res)=>{
+ 
+  try {
+
+      let token = req.userinfo
+      if(token.user_type == 2){
+
+
+
+          const counselor_id = req.query.counselor_id
+     
+          let room_id = ""
+
+          
+          if(!counselor_id){
+              return res.status(400).json({
+                  message:"invalid request"
+              })
+          }
+
+
+          const check1 = await chatroomModel.findOne({$and:[{created_by:counselor_id},{created_with:req.userinfo._id}]})
+
+          
+
+
+          if(check1!=null){
+               room_id  = check1._id
+          }
+
+          const check2 = await chatroomModel.findOne({$and:[{created_by:req.userinfo._id},{created_with:counselor_id}]})
+         
+          if(check2!=null){
+             room_id  = check2._id
+          }
+
+
+          if(room_id==""){
+            return res.status(200).json({
+              messages:[]
+            })
+          }
+
+          const messages = await discussionModel.find({chat_room_id:room_id}).populate('from').populate('to')
+          
+          return res.status(200).json({
+            messages:messages
+          })
+          
+
+   }else{
+          return res.status(401).json({
+              message:"Anauthorize request"
+          })
+      }
+
+    
+
+      
+  } catch (error) {
+      return res.status(500).json({
+          message:"Internal server error"+error
+      })
+  }
+
+}
+
+
+export const UpdateNotificationToken = async(req,res)=>{
+ 
+  try {
+
+      let token = req.userinfo
+      if(token.user_type == 2){
+
+        const token = req.body.token
+
+        await userModel.findByIdAndUpdate({_id:req.userinfo._id},{notification_token:token})
+
+        return res.status(200).json({
+          message:"token updated"
+      })
+
+
+          
+
+   }else{
+          return res.status(401).json({
+              message:"Anauthorize request"
+          })
+      }
 
     
 

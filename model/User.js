@@ -32,7 +32,7 @@ const UserSchema = new mongoose.Schema({
     },
     aadharNumber:{
         type:String,
-        required:true
+        default:"NA"
     },
     citizenShip:{
         type:String,
@@ -67,13 +67,23 @@ const UserSchema = new mongoose.Schema({
     user_type:{
         type:Number,
         required:true
+    },
+    neet_score:{
+        type:String,
+        default:"NA"
+    },
+    profile_photo:{
+        type:String,
+        default:"default_user.png"
+    },
+    isActive:{
+        type:Boolean,
+        default:false
+    },
+    notification_token:{
+        type:String,
+        required:true
     }
-
-
-
-
-
-
 
 },{
     timestamps:true

@@ -22,6 +22,10 @@ import applicationModel from "../model/Application.js"
 import BannerImageModel from "../model/BannerImage.js"
 import countryModel from "../model/Country.js"
 
+import userModel from "../model/User.js"
+import chatroomModel from "../model/ChatRoom.js"
+import discussionModel from "../model/Discussion.js"
+
 
 
 
@@ -197,7 +201,8 @@ export const AddCourse = async(req,res)=>{
     
             const newCourse = new courseModel({
                 name:name,
-                course_image:randomname_university
+                course_image:randomname_university,
+                cat_id:cat_id
             })
     
             await newCourse.save()
@@ -1221,6 +1226,82 @@ export const addCategory = async(req,res)=>{
 }
  
 
+export const editCategory = async(req,res)=>{
+    try {
+
+
+        let token = req.userinfo
+        console.log(token)
+        if(token.admin_type == 1){
+            const name = req.body.name
+            const cat_image = req.files
+            const cat_id = req.body.cat_id
+
+            if(!cat_id){
+                return res.status(400).json({
+                    message:"category id not found"
+                })
+            }
+
+            if(name && !cat_image || cat_image==null){
+
+                 await categoryModel.findByIdAndUpdate({_id:cat_id},{name:name})
+
+                return res.status(200).json({
+                    message:"updated"
+                })
+
+            }
+
+
+            if(cat_image!=null || cat_image && name){
+
+                const randomname = Date.now() + '-'+cat_image.cat_image.name
+            const newpath =  path.join(process.cwd(),'category_image',randomname)
+            await cat_image.cat_image.mv(newpath)
+         
+       
+
+            await categoryModel.findByIdAndUpdate({_id:cat_id},{name:name,category_image:randomname})
+       
+            return res.status(201).json({
+                message:"category updated"
+             })
+       
+       
+        
+
+            }
+
+            return res.status(400).json({
+                message:"invalid request"
+            })
+
+
+            
+          
+       
+
+        }else{
+            return res.status(401).json({
+                message:"Anauthorize request"
+            })
+        }
+
+   
+
+        
+    } catch (error) {
+
+
+
+        
+        return res.status(500).json({
+            message:"Internal server error"
+        })
+    }
+}
+
 
 export const getCategories = async(req,res)=>{
     try {
@@ -1742,6 +1823,9 @@ export const AddBanner = async(req,res)=>{
 
 
 
+
+
+
  
 
 
@@ -1766,3 +1850,303 @@ export const dummy =async(req,res)=>{
   await top2.save()
 
 }
+
+
+
+export const AddEducationCounselors = async(req,res)=>{
+ 
+    try {
+
+        let token = req.userinfo
+        if(token.admin_type == 1){
+
+            
+            const name = req.body.counselor_name
+            const email = req.body.counselor_email
+            const phone = req.body.counselor_phone
+            const image = req.files.counselor_image
+            const isactive = req.body.isActive
+
+
+            if(!name){
+                return res.status(400).json({
+                    message:"Name is required"
+                })
+            }
+
+            if(!email){
+                return res.status(400).json({
+                    message:"email is required"
+                })
+            }
+
+            
+            if(!phone){
+                return res.status(400).json({
+                    message:"phone is required"
+                })
+            }
+
+            
+            if(!image){
+                return res.status(400).json({
+                    message:"image is required"
+                })
+            }
+
+            if(!isactive){
+                return res.status(400).json({
+                    message:"please tell us set counselor active or not"
+                })
+            }
+
+            const randomname = Date.now() + '-'+image.name
+            const newpath =  path.join(process.cwd(),'user_photo',randomname)
+            await image.mv(newpath)
+
+            // const newcounselor = new counselorModel({
+            //     name:name,
+            //     email:email,
+            //     phone:phone,
+            //     isActive:isactive,
+            //     profile_image:randomname
+            // })
+
+
+
+
+            const newcounselor = new userModel({
+                phone:phone,
+                address:"NA",
+                name:name,
+                email:email,
+                state:"NA",
+                alternatePhone:"NA",
+                aadharNumber:"NA",
+                citizenShip:"NA",
+                passport_number:"NA",
+                student_type:0,
+                gender:0,
+                dob:"NA",
+        
+                university_name:"NA",
+                tweleve_percentage:"NA",
+                course_name:"NA",
+                user_type:3,
+                profile_photo:randomname,
+                isActive:isactive,
+                notification_token:"NA"
+            })
+
+
+            await newcounselor.save()
+
+            return res.status(201).json({
+                message:"created"
+            })
+
+
+
+     }else{
+            return res.status(401).json({
+                message:"Anauthorize request"
+            })
+        }
+
+      
+
+        
+    } catch (error) {
+        return res.status(500).json({
+            message:"Internal server error"+error
+        })
+    }
+
+}
+
+
+export const SendMessage = async(req,res)=>{
+ 
+    try {
+
+        let token = req.userinfo
+        if(token.admin_type == 1){
+
+
+
+            const sender_id = req.body.sender_id
+            const reciever_id = req.body.reciever_id
+            const message = req.body.message
+
+            
+            if(!sender_id || !reciever_id || !message){
+                return res.status(400).json({
+                    message:"invalid request"
+                })
+            }
+
+            let room_id = ""
+
+            //check room if not then create
+
+            const check_room = await chatroomModel.findOne({$and:[{created_by:sender_id},{created_with:reciever_id}]})
+
+            if(check_room!=null){
+                room_id = check_room._id
+            }
+
+            
+            const check_room2 = await chatroomModel.findOne({$and:[{created_by:reciever_id},{created_with:sender_id}]})
+
+            if(check_room2 !=null){
+                room_id = check_room2._id
+            }
+
+
+            if(check_room==null && check_room2==null){
+                //proceed
+
+
+                const createroom = new chatroomModel({
+                    created_by:sender_id,
+                    created_with:reciever_id
+                })
+               const room =  await createroom.save()
+
+
+                const newmessage = new discussionModel({
+                    from:sender_id,
+                    to:reciever_id,
+                    message:message,
+                    chat_room_id:room._id
+                })
+
+                await newmessage.save()
+
+                return res.status(201).json({
+                    message:"message sent"
+                })
+
+              
+
+
+
+            }
+
+           
+            const newmessage = new discussionModel({
+                from:sender_id,
+                to:reciever_id,
+                message:message,
+                chat_room_id:room_id
+            })
+
+            await newmessage.save()
+
+            return res.status(201).json({
+                message:"message sent"
+            })
+            
+
+
+
+
+
+            
+            
+
+            
+
+
+
+
+          
+
+
+            
+
+     }else{
+            return res.status(401).json({
+                message:"Anauthorize request"
+            })
+        }
+
+      
+
+        
+    } catch (error) {
+        return res.status(500).json({
+            message:"Internal server error"+error
+        })
+    }
+
+}
+
+
+
+export const GetChatRooms = async(req,res)=>{
+ 
+    try {
+
+        let token = req.userinfo
+        if(token.admin_type == 1){
+
+
+
+            const sender_id = req.query.sender_id
+       
+        
+
+            
+            if(!sender_id){
+                return res.status(400).json({
+                    message:"invalid request"
+                })
+            }
+
+
+            const find_rooms = await chatroomModel.find({
+                $or: [
+                    { created_by: sender_id },
+                    { created_with: sender_id }
+                ]
+            }).populate('created_by').populate('created_with')
+
+            return res.status(201).json({
+                rooms:find_rooms
+            })
+            
+
+            
+
+     }else{
+            return res.status(401).json({
+                message:"Anauthorize request"
+            })
+        }
+
+      
+
+        
+    } catch (error) {
+        return res.status(500).json({
+            message:"Internal server error"+error
+        })
+    }
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

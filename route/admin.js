@@ -1,6 +1,7 @@
 import express from "express"
-import { AddBanner, AddCountry, AddCourse, AddFacility, AddFaculty, AddRequireDocument, AddRequireLanguage, AddUniversity, AdminLogin, AdminRegister, GetAllAppliedApplication, GetApplicationById, GetCountry, GetCourse, GetFacility, GetFaculty, GetLanguage, GetRequiredDocument, GetUniversity, GetUniversityById, addCategory, addRegion, assignTopEngineering, assignTopMbbs, assignTopUniversity, dummy, getCategories, getRegion } from "../controller/admin.js"
+import { AddBanner, AddCountry, AddCourse, AddEducationCounselors, AddFacility, AddFaculty, AddRequireDocument, AddRequireLanguage, AddUniversity, AdminLogin, AdminRegister, GetAllAppliedApplication, GetApplicationById, GetChatRooms, GetCountry, GetCourse, GetFacility, GetFaculty, GetLanguage, GetRequiredDocument, GetUniversity, GetUniversityById, SendMessage, addCategory, addRegion, assignTopEngineering, assignTopMbbs, assignTopUniversity, dummy, editCategory, getCategories, getRegion } from "../controller/admin.js"
 import { checkauth } from "../middlewear/auth.js"
+import { getCategoryById } from "../controller/user.js"
 
 
 const admin_router = express.Router()
@@ -15,6 +16,8 @@ admin_router.get("/get",checkauth,GetUniversity)
 admin_router.get("/getbyid",checkauth,GetUniversityById)
 admin_router.post("/add_category",checkauth,addCategory)
 admin_router.get("/get_categories",checkauth,getCategories)
+admin_router.get("/get_category_by_id",checkauth,getCategoryById)
+admin_router.post("/edit_category",checkauth,editCategory)
 admin_router.post("/add_region",checkauth,addRegion)
 admin_router.get("/get_region",checkauth,getRegion)
 admin_router.post("/assign_top_university",checkauth,assignTopUniversity)
@@ -38,5 +41,8 @@ admin_router.get("/getlanguage",checkauth,GetLanguage)
 admin_router.post("/add_country",checkauth,AddCountry)
 admin_router.get("/getcountry",checkauth,GetCountry)
 
+admin_router.post("/add_counselor",checkauth,AddEducationCounselors)
+admin_router.post("/send_message",checkauth,SendMessage)
+admin_router.get("/getchatrooms",checkauth,GetChatRooms)
 admin_router.post("/dummy",dummy)
 export default admin_router

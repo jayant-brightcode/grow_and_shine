@@ -1,7 +1,7 @@
 import express from 'express'
 
 import { checkauth } from "../middlewear/auth.js"
-import { AddComment, AddPost, AddReviewAndRating, AddTestimonial, ApplyToUniversity, CompareUniversity, GetBanner, GetComment, GetCountryByRegionId, GetCourseByCatId, GetMyAppliedApplication, GetPosts, GetRegion, GetReviewAndRatingByUniversityId, GetTestimonialByUniversityId, GetTopEngineering, GetTopMbbs, GetTopUniversity, GetUniversity, GetUniversityByCategory, GetUniversityByCountry, GetUniversityById, LikePost, OtpVerify, PopularCountry, RegisterUser, UserLogin, getCategories, temp } from '../controller/user.js'
+import { AddComment, AddPost, AddReviewAndRating, AddTestimonial, ApplyToUniversity, CompareUniversity, GetBanner, GetComment, GetCountryByRegionId, GetCourseByCatId, GetMessages, GetMyAppliedApplication, GetMyCounselor, GetPosts, GetProfile, GetRegion, GetReviewAndRatingByUniversityId, GetTestimonialByUniversityId, GetTopEngineering, GetTopMbbs, GetTopUniversity, GetUniversity, GetUniversityByCategory, GetUniversityByCountry, GetUniversityById, LikePost, OtpVerify, PopularCountry, RegisterUser, SendMessage, UpdateNotificationToken, UpdateProfilePhoto, UpdateUserProfile, UserLogin, getCategories, temp } from '../controller/user.js'
 
 
 
@@ -58,6 +58,14 @@ user_route.post("/add_like",checkauth,LikePost)
 
 user_route.post("/add_testimonial",checkauth,AddTestimonial)
 user_route.get("/get_testimonial",checkauth,GetTestimonialByUniversityId)
+user_route.get("/get_profile",checkauth,GetProfile)
+user_route.post("/update_profile_photo",checkauth,UpdateProfilePhoto)
+user_route.post("/update_profile",checkauth,UpdateUserProfile)
+
+user_route.get("/get_my_counselor",checkauth,GetMyCounselor)
+user_route.post("/send_message",checkauth,SendMessage)
+user_route.get("/get_message",checkauth,GetMessages)
+user_route.post("/update_notification_token",checkauth,UpdateNotificationToken)
 user_route.get("/temp",temp)
 
 export default user_route
