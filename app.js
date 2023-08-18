@@ -24,6 +24,8 @@ app.use('/language-image',express.static('language_image'));
 app.use('/country-image',express.static('country_image'));
 app.use('/post-image',express.static('post_images'));
 app.use('/user-image',express.static('user_photo'));
+app.use('/news-image',express.static('news_image'));
+app.use('/blog-image',express.static('blog_image'));
 
 
 app.use(fileupload({

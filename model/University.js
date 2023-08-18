@@ -130,7 +130,12 @@ const UniversitySchema = new mongoose.Schema({
     eligibilty:{
         type:String,
         required:true
+    },
+    fee_structure:{
+        type:String,
+        required:true
     }
+
 
 },{
     timestamps:true

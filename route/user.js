@@ -1,7 +1,7 @@
 import express from 'express'
 
 import { checkauth } from "../middlewear/auth.js"
-import { AddComment, AddPost, AddReviewAndRating, AddTestimonial, ApplyToUniversity, CompareUniversity, GetBanner, GetComment, GetCountryByRegionId, GetCourseByCatId, GetMessages, GetMyAppliedApplication, GetMyCounselor, GetPosts, GetProfile, GetRegion, GetReviewAndRatingByUniversityId, GetTestimonialByUniversityId, GetTopEngineering, GetTopMbbs, GetTopUniversity, GetUniversity, GetUniversityByCategory, GetUniversityByCountry, GetUniversityById, LikePost, OtpVerify, PopularCountry, RegisterUser, SendMessage, UpdateNotificationToken, UpdateProfilePhoto, UpdateUserProfile, UserLogin, getCategories, temp } from '../controller/user.js'
+import { AddComment, AddFavUniversity, AddPost, AddReviewAndRating, AddTestimonial, ApplyToUniversity, BookCounselling, CompareUniversity, GetBanner, GetBlog, GetBookedCounselling, GetComment, GetContactUs, GetCountryByRegionId, GetCourseByCatId, GetFavUniversity, GetMedia, GetMessages, GetMyAppliedApplication, GetMyCounselor, GetNotification, GetOperatingCity, GetPosts, GetProfile, GetRegion, GetReviewAndRatingByUniversityId, GetTestimonialByUniversityId, GetTopEngineering, GetTopMbbs, GetTopUniversity, GetUniversity, GetUniversityByCategory, GetUniversityByCountry, GetUniversityById, LikePost, OtpVerify, PopularCountry, RegisterUser, SendMessage, UpdateNotificationToken, UpdateProfilePhoto, UpdateUserProfile, UserLogin, getCategories, getFeeStructure, temp } from '../controller/user.js'
 
 
 
@@ -48,6 +48,8 @@ user_route.get("/get_country_by_region",checkauth,GetCountryByRegionId)
 user_route.get("/get_university_by_id",checkauth,GetUniversityById)
 
 user_route.get("/get_posts",checkauth,GetPosts)
+user_route.get("/get_media",checkauth,GetMedia)
+user_route.get("/get_blog",checkauth,GetBlog)
 
 user_route.get("/get_comment",checkauth,GetComment)
 
@@ -66,6 +68,15 @@ user_route.get("/get_my_counselor",checkauth,GetMyCounselor)
 user_route.post("/send_message",checkauth,SendMessage)
 user_route.get("/get_message",checkauth,GetMessages)
 user_route.post("/update_notification_token",checkauth,UpdateNotificationToken)
+
+user_route.get("/get_notification",checkauth,GetNotification)
+user_route.post("/book_counselling",checkauth,BookCounselling)
+user_route.get("/get_book_counselling",checkauth,GetBookedCounselling)
+user_route.get("/get_operating_city",checkauth,GetOperatingCity)
+user_route.get("/addtofav",checkauth,AddFavUniversity)
+user_route.get("/getfav",checkauth,GetFavUniversity)
+user_route.get("/get_fee_structure",checkauth,getFeeStructure)
+user_route.get("/get_contact_us",checkauth,GetContactUs)
 user_route.get("/temp",temp)
 
 export default user_route

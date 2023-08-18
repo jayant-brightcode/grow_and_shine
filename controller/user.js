@@ -23,6 +23,15 @@ import testimonialModel from "../model/Testimonial.js";
 import chatroomModel from "../model/ChatRoom.js";
 import discussionModel from "../model/Discussion.js";
 
+import axios from "axios";
+import notificationModel from "../model/Notification.js";
+import cousellingModel from "../model/Counselling.js";
+import cityModel from "../model/OperatingCity.js";
+import favUniversityModel from "../model/FavUniversity.js";
+import newsandmediamodel from "../model/NewsAndMedia.js";
+import blogmodel from "../model/Blog.js";
+import contactModel from "../model/ContactUs.js";
+
 
 
 
@@ -587,9 +596,43 @@ export const ApplyToUniversity = async(req,res)=>{
 
           await apply.save()
 
-          return res.status(201).json({
-            message:"application applied"
-          })
+         //  sendFCMNotification(req.userinfo.notification_token)
+
+
+
+
+           const fcmUrl = 'https://fcm.googleapis.com/fcm/send';
+  const serverKey = process.env.SERVER_KEY;
+  const deviceToken = req.userinfo.notification_token;
+
+
+
+  const authorizationHeader = `key=${serverKey}`;
+
+  const postData = {
+    to: deviceToken,
+    data: {
+      title: 'Thank you for applying',
+      body: 'we will back to you',
+    },
+  };
+
+  const headers = {
+    'Authorization': `${authorizationHeader}`,
+    'Content-Type': 'application/json',
+  };
+
+  try {
+    const response = await axios.post(fcmUrl, postData, { headers });
+    return res.status(200).json({
+      message:"form applied"
+    })
+   // console.log('FCM response:', response.data);
+  } catch (error) {
+    return res.status(200).json({
+      message:"error happened while sending notification"+error
+    });
+  }
 
 
         
@@ -625,7 +668,7 @@ export const ApplyToUniversity = async(req,res)=>{
       
   } catch (error) {
       return res.status(500).json({
-          message:"Internal server error"
+          message:"Internal server error"+error
       })
   }
 
@@ -1553,6 +1596,80 @@ export const GetPosts = async(req,res)=>{
 
 }
 
+export const GetMedia = async(req,res)=>{
+ 
+  try {
+
+     let token = req.userinfo
+     if(token.user_type == 2){
+
+        
+    
+  
+
+      const post  = await newsandmediamodel.find()
+
+
+      
+      res.status(200).json({
+          media:post
+      })
+
+
+     }else{
+          return res.status(401).json({
+              message:"Anauthorize request"
+          })
+     }
+
+    
+
+      
+  } catch (error) {
+      return res.status(500).json({
+          message:"Internal server error"+error
+      })
+  }
+
+}
+
+export const GetBlog = async(req,res)=>{
+ 
+  try {
+
+     let token = req.userinfo
+     if(token.user_type == 2){
+
+        
+    
+  
+
+      const post  = await blogmodel.find().populate("posted_by")
+
+
+      
+      res.status(200).json({
+          media:post
+      })
+
+
+     }else{
+          return res.status(401).json({
+              message:"Anauthorize request"
+          })
+     }
+
+    
+
+      
+  } catch (error) {
+      return res.status(500).json({
+          message:"Internal server error"+error
+      })
+  }
+
+}
+
 
 export const GetCourseByCatId = async(req,res)=>{
  
@@ -2288,5 +2405,410 @@ export const UpdateNotificationToken = async(req,res)=>{
           message:"Internal server error"+error
       })
   }
+
+}
+
+
+
+export const GetNotification = async(req,res)=>{
+ 
+  try {
+
+      let token = req.userinfo
+      if(token.user_type == 2){
+
+
+
+       const notification = await notificationModel.find({toUser:req.userinfo._id})
+          
+          return res.status(200).json({
+            notification:notification
+          })
+           
+
+   }else{
+          return res.status(401).json({
+              message:"Anauthorize request"
+          })
+      }
+
+    
+
+      
+  } catch (error) {
+      return res.status(500).json({
+          message:"Internal server error"+error
+      })
+  }
+
+}
+
+
+export const BookCounselling = async(req,res)=>{
+ 
+  try {
+
+      let token = req.userinfo
+      if(token.user_type == 2){
+
+
+        const datetime = req.body.datetime
+        const address = req.body.address
+        const office_address = req.body.city_id
+        const remarks = req.body.remarks
+        const type = req.body.type
+
+
+
+        if(!datetime){
+          return res.status(400).json({
+            message:"please select data time"
+          })
+        }
+
+
+
+        if(office_address){
+          const counselling = new cousellingModel({
+            datetime:datetime,
+            address:address,
+            office_location:office_address,
+            remarks:remarks,
+            counselling_type:type,
+            user:req.userinfo._id
+          })
+  
+          const booked = await counselling.save()
+  
+          return res.status(200).json({
+            message:"counselling booked",
+            datetime:booked.datetime
+          })
+
+        }else{
+
+          const counselling = new cousellingModel({
+            datetime:datetime,
+            address:address,
+            remarks:remarks,
+            counselling_type:type,
+            user:req.userinfo._id
+          })
+  
+          const booked = await counselling.save()
+  
+          return res.status(200).json({
+            message:"counselling booked",
+            datetime:booked.datetime
+          })
+
+        }
+
+
+       
+
+
+
+
+
+
+    
+           
+
+   }else{
+          return res.status(401).json({
+              message:"Anauthorize request"
+          })
+      }
+
+    
+
+      
+  } catch (error) {
+      return res.status(500).json({
+          message:"Internal server error"+error
+      })
+  }
+
+}
+
+
+export const GetBookedCounselling = async(req,res)=>{
+ 
+  try {
+
+      let token = req.userinfo
+      if(token.user_type == 2){
+
+
+       
+
+
+       
+
+
+        const booked = await cousellingModel.find({user:req.userinfo._id}).populate("office_location")
+
+        return res.status(200).json({
+          bookedCOunselling:booked
+        })
+
+
+
+
+
+
+    
+           
+
+   }else{
+          return res.status(401).json({
+              message:"Anauthorize request"
+          })
+      }
+
+    
+
+      
+  } catch (error) {
+      return res.status(500).json({
+          message:"Internal server error"+error
+      })
+  }
+
+}
+
+
+
+export const GetOperatingCity = async(req,res)=>{
+ 
+  try {
+
+      let token = req.userinfo
+      if(token.user_type == 2){
+
+
+       
+
+
+    const city = await cityModel.find()
+
+        return res.status(200).json({
+          city:city
+        })
+
+
+
+
+
+
+    
+           
+
+   }else{
+          return res.status(401).json({
+              message:"Anauthorize request"
+          })
+      }
+
+    
+
+      
+  } catch (error) {
+      return res.status(500).json({
+          message:"Internal server error"+error
+      })
+  }
+
+}
+
+
+export const AddFavUniversity = async(req,res)=>{
+ 
+  try {
+
+      let token = req.userinfo
+      if(token.user_type == 2){
+
+
+        const u_id = req.query.university_id
+      
+
+
+
+        if(!u_id){
+          return res.status(400).json({
+            message:"university id is required"
+          })
+        }
+
+
+        const isfav  = await favUniversityModel.findOne({user:req.userinfo._id})
+
+        if(isfav){
+          return res.status(200).json({
+             message:"already added to fav"
+          })
+        }
+
+
+        const fav = new favUniversityModel({
+          university:u_id,
+          user:req.userinfo._id
+        })
+
+        await fav.save()
+
+
+        return res.status(200).json({
+          message:"added to fav"
+        })
+
+
+
+              
+
+   }else{
+          return res.status(401).json({
+              message:"Anauthorize request"
+          })
+      }
+
+    
+
+      
+  } catch (error) {
+      return res.status(500).json({
+          message:"Internal server error"+error
+      })
+  }
+
+}
+   
+export const GetFavUniversity = async(req,res)=>{
+ 
+  try {
+
+      let token = req.userinfo
+      if(token.user_type == 2){
+
+
+      
+      
+        const isfav  = await favUniversityModel.find({user:req.userinfo._id}).populate("university")
+
+        
+
+        return res.status(200).json({
+          favuniversity:isfav
+        })
+
+
+
+              
+
+   }else{
+          return res.status(401).json({
+              message:"Anauthorize request"
+          })
+      }
+
+    
+
+      
+  } catch (error) {
+      return res.status(500).json({
+          message:"Internal server error"+error
+      })
+  }
+
+}
+
+
+
+export const getFeeStructure = async(req,res)=>{
+  try {
+
+    let token = req.userinfo
+    if(token.user_type == 2){
+
+
+    
+     const country_id = req.query.country_id
+     const university_id = req.query.university_id
+
+
+     if(!country_id || !university_id){
+      return res.status(400).json({
+        message:"invalid request"
+      })
+     }
+
+
+     const docs = await universityModel.findOne({$and:[{_id:university_id},{country:country_id}]})
+
+     if(!docs.fee_structure){
+      return res.status(400).json({
+        message:"Not found"
+      })
+     }
+
+     return res.status(200).json({
+      message:docs.fee_structure
+    })
+
+        
+
+ }else{
+        return res.status(401).json({
+            message:"Anauthorize request"
+        })
+    }
+
+  
+
+    
+} catch (error) {
+    return res.status(500).json({
+        message:"Internal server error"+error
+    })
+}
+
+}
+          
+export const GetContactUs = async(req,res)=>{
+  try {
+
+    let token = req.userinfo
+    if(token.user_type == 2){
+
+
+    
+    
+
+
+     const docs = await contactModel.find()
+
+
+     return res.status(200).json({
+       contact:docs
+    })
+
+        
+
+ }else{
+        return res.status(401).json({
+            message:"Anauthorize request"
+        })
+    }
+
+  
+
+    
+} catch (error) {
+    return res.status(500).json({
+        message:"Internal server error"+error
+    })
+}
 
 }

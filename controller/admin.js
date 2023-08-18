@@ -25,6 +25,13 @@ import countryModel from "../model/Country.js"
 import userModel from "../model/User.js"
 import chatroomModel from "../model/ChatRoom.js"
 import discussionModel from "../model/Discussion.js"
+import axios from "axios"
+import { log } from "console"
+import notificationModel from "../model/Notification.js"
+import cityModel from "../model/OperatingCity.js"
+import newsandmediamodel from "../model/NewsAndMedia.js"
+import blogmodel from "../model/Blog.js"
+import contactModel from "../model/ContactUs.js"
 
 
 
@@ -260,6 +267,146 @@ export const GetCourse = async(req,res)=>{
 
 }
 
+export const getCourseById = async(req,res)=>{
+    try {
+  
+  
+        let token = req.userinfo
+        console.log(token)
+        if(token.admin_type == 1){
+            
+  
+          const course_id = req.query.course_id
+  
+  
+          if(!course_id){
+            return res.status(400).json({
+              message:"course id is required"
+            })
+          }
+  
+          const find_cat = await courseModel.findById({_id:course_id})
+  
+          return res.status(200).json({
+            "_id": find_cat._id,
+            "course_name": find_cat.name,
+            "course_image": find_cat.course_image,
+            "createdAt": find_cat.createdAt,
+            "updatedAt": find_cat.updatedAt,
+            "cat_id":find_cat.cat_id,
+            "__v": 0
+          })
+  
+       
+       
+          
+          
+       
+  
+        }else{
+            return res.status(401).json({
+                message:"Anauthorize request"
+            })
+        }
+  
+   
+  
+        
+    } catch (error) {
+  
+  
+  
+        
+        return res.status(500).json({
+            message:"Internal server error"
+        })
+    }
+  }
+
+export const editCourse = async(req,res)=>{
+    try {
+
+
+        let token = req.userinfo
+        console.log(token)
+        if(token.admin_type == 1){
+            const name = req.body.course_name
+            const course_image = req.files
+            const course_id = req.body._id
+            const cat_id = req.body.cat_id
+
+            if(!course_id){
+                return res.status(400).json({
+                    message:"course id not found"
+                })
+            }
+
+            if(!cat_id){
+                return res.status(400).json({
+                    message:"cat id not found"
+                })
+            }
+
+
+
+            if(name && !course_image || course_image==null){
+
+                 await courseModel.findByIdAndUpdate({_id:course_id},{name:name,cat_id:cat_id})
+
+                return res.status(200).json({
+                    message:"updated"
+                })
+
+            }
+
+
+            if(course_image!=null || course_image && name && cat_id){
+
+            const randomname = Date.now() + '-'+course_image.course_image.name
+            const newpath =  path.join(process.cwd(),'universityPhotos',randomname)
+            await course_image.course_image.mv(newpath)
+         
+       
+
+            await courseModel.findByIdAndUpdate({_id:course_id},{name:name,course_image:randomname,cat_id:cat_id})
+       
+            return res.status(201).json({
+                message:"course updated"
+             })
+       
+       
+        
+
+            }
+
+            return res.status(400).json({
+                message:"invalid request"
+            })
+
+
+            
+          
+       
+
+        }else{
+            return res.status(401).json({
+                message:"Anauthorize request"
+            })
+        }
+
+   
+
+        
+    } catch (error) {
+
+
+
+        
+        return res.status(500).json({
+            message:"Internal server error"
+        })
+    }
+}  
 
 export const AddFaculty = async(req,res)=>{
  
@@ -436,6 +583,53 @@ export const GetFacility = async(req,res)=>{
     
             return res.status(201).json({
                 facilities:fac
+            })
+        }else{
+            return res.status(401).json({
+                message:"Anauthorize request"
+            })
+        }
+
+      
+
+        
+    } catch (error) {
+        return res.status(500).json({
+            message:"Internal server error"
+        })
+    }
+
+}
+
+
+export const GetFacilityByID = async(req,res)=>{
+ 
+    try {
+
+        let token = req.userinfo
+    
+        if(token.admin_type == 1){
+         
+        
+            const facility_id = req.query.facility_id
+
+            if(!facility_id){
+                return res.status(400).json({
+                    message:"facility id not found"
+                })
+            }
+           
+
+            const fac = await FacilityModel.findById({_id:facility_id})
+
+
+    
+            return res.status(201).json({
+                _id:fac._id,
+                name:fac.name,
+                desc:fac.desc,
+                photo:fac.photo,
+                __v: 0
             })
         }else{
             return res.status(401).json({
@@ -718,7 +912,8 @@ export const AddCountry = async(req,res)=>{
 
                 const doc = new countryModel({
                     name:name,
-                    country_image:randomname_university
+                    country_image:randomname_university,
+                    region:region
                   
              
                 })
@@ -746,7 +941,7 @@ export const AddCountry = async(req,res)=>{
         
     } catch (error) {
         return res.status(500).json({
-            message:"Internal server error"
+            message:"Internal server error"+error
         })
     }
 
@@ -829,13 +1024,14 @@ export const AddUniversity = async(req,res)=>{
 
 
             const university_photo = req.files.university_photo
-            const virtual_tour_video = req.files.virtual_tour_video
+            const virtual_tour_video = req.body.virtual_tour_video
             const galary = req.files.galary
+            const fee_structure = req.files.fee_structure
 
 
             
             let galary_images = []
-            let virtual_tour_url = ""
+          //  let virtual_tour_url = ""
             let facultyModel = []
             let facModel = []
             let DocModel = []
@@ -893,6 +1089,12 @@ export const AddUniversity = async(req,res)=>{
                 })
             }
 
+            if(!fee_structure){
+                return res.status(400).json({
+                    message:"please provide fee structure pdf or any file"
+                })
+            }
+
 
 
      
@@ -905,6 +1107,11 @@ export const AddUniversity = async(req,res)=>{
              const randomname_university = Date.now() + '-'+university_photo.name
              const newpath =  path.join(process.cwd(),'universityPhotos',randomname_university)
              await university_photo.mv(newpath)
+
+
+             const feedoc = Date.now() + '-'+fee_structure.name
+             const feenewpath =  path.join(process.cwd(),'fee_structure_image',feedoc)
+             await fee_structure.mv(feenewpath)
                 
             
 
@@ -944,15 +1151,15 @@ export const AddUniversity = async(req,res)=>{
             }
 
 
-            if(virtual_tour_video){
+            // if(virtual_tour_video){
 
-                const randomname_virtual_video = Date.now() + '-'+virtual_tour_video.name
-                const newpath =  path.join(process.cwd(),'virtualVideos',randomname_virtual_video)
-                await virtual_tour_video.mv(newpath)
-                virtual_tour_url = randomname_virtual_video
+            //     const randomname_virtual_video = Date.now() + '-'+virtual_tour_video.name
+            //     const newpath =  path.join(process.cwd(),'virtualVideos',randomname_virtual_video)
+            //     await virtual_tour_video.mv(newpath)
+            //     virtual_tour_url = randomname_virtual_video
                  
 
-            }
+            // }
 
 
             for (let index = 0; index < faculty.length; index++) {
@@ -1033,7 +1240,7 @@ export const AddUniversity = async(req,res)=>{
                 required_document:DocModel,
                 application_guidance:application_guidance,
                 language_require:LangModel,
-                university_video:virtual_tour_url,
+                university_video:virtual_tour_video,
                 galary:galary_images,
                 country:country,
                 accreditation:accreditation,
@@ -1054,7 +1261,8 @@ export const AddUniversity = async(req,res)=>{
                 flight_time:flight_time,
                 category:category,
                 region:region,
-                eligibilty:eligibility
+                eligibilty:eligibility,
+                fee_structure:feedoc
 
 
             })
@@ -1302,6 +1510,146 @@ export const editCategory = async(req,res)=>{
     }
 }
 
+export const editCountry = async(req,res)=>{
+    try {
+
+
+        let token = req.userinfo
+        console.log(token)
+        if(token.admin_type == 1){
+            const name = req.body.name
+            const country_image = req.files
+            const country_id = req.body._id
+            const region_id = req.body.region_id
+
+            if(!country_id){
+                return res.status(400).json({
+                    message:"country id not found"
+                })
+            }
+
+            if(!region_id){
+                return res.status(400).json({
+                    message:"region id not found"
+                })
+            }
+
+
+
+            if(name && !country_image || country_image==null){
+
+                 await countryModel.findByIdAndUpdate({_id:country_id},{name:name,region:region_id})
+
+                return res.status(200).json({
+                    message:"updated"
+                })
+
+            }
+
+
+            if(country_image!=null || country_image && name && region_id){
+
+            const randomname = Date.now() + '-'+country_image.image.name
+            const newpath =  path.join(process.cwd(),'country_image',randomname)
+            await country_image.image.mv(newpath)
+         
+       
+
+            await countryModel.findByIdAndUpdate({_id:country_id},{name:name,country_image:randomname,region:region_id})
+       
+            return res.status(201).json({
+                message:"country updated"
+             })
+       
+       
+        
+
+            }
+
+            return res.status(400).json({
+                message:"invalid request"
+            })
+
+
+            
+          
+       
+
+        }else{
+            return res.status(401).json({
+                message:"Anauthorize request"
+            })
+        }
+
+   
+
+        
+    } catch (error) {
+
+
+
+        
+        return res.status(500).json({
+            message:"Internal server error"
+        })
+    }
+}
+
+export const getCountryById = async(req,res)=>{
+    try {
+  
+  
+        let token = req.userinfo
+        console.log(token)
+        if(token.admin_type == 1){
+            
+  
+          const country_id = req.query.country_id
+  
+  
+          if(!country_id){
+            return res.status(400).json({
+              message:"country id is required"
+            })
+          }
+  
+          const find_cat = await countryModel.findById({_id:country_id})
+  
+          return res.status(200).json({
+            "_id": find_cat._id,
+            "name": find_cat.name,
+            "image": find_cat.country_image,
+            "createdAt": find_cat.createdAt,
+            "updatedAt": find_cat.updatedAt,
+            "region_id":find_cat.region,
+            "__v": 0
+          })
+  
+       
+       
+          
+          
+       
+  
+        }else{
+            return res.status(401).json({
+                message:"Anauthorize request"
+            })
+        }
+  
+   
+  
+        
+    } catch (error) {
+  
+  
+  
+        
+        return res.status(500).json({
+            message:"Internal server error"
+        })
+    }
+  }
 
 export const getCategories = async(req,res)=>{
     try {
@@ -1427,6 +1775,106 @@ export const getRegion = async(req,res)=>{
     }
 }
 
+export const getRegion_by_id = async(req,res)=>{
+    try {
+
+
+        let token = req.userinfo
+        console.log(token)
+        if(token.admin_type == 1){
+            
+            const regiond_id = req.query.region_id
+
+            if(!regiond_id){
+                return res.status(400).json({
+                    message:"region id not found"
+                })
+            }
+
+          const f_region = await regionModel.findById({_id:regiond_id})
+       
+       
+          
+            return res.status(201).json({
+                _id:f_region._id,
+               name:f_region.name,
+               createdAt:f_region.createdAt,
+               updatedAt:f_region.updatedAt
+            })
+       
+
+        }else{
+            return res.status(401).json({
+                message:"Anauthorize request"
+            })
+        }
+
+   
+
+        
+    } catch (error) {
+
+
+
+        
+        return res.status(500).json({
+            message:"Internal server error"
+        })
+    }
+}
+
+
+export const editRegion = async(req,res)=>{
+    try {
+
+
+        let token = req.userinfo
+        console.log(token)
+        if(token.admin_type == 1){
+            
+            const regiond_id = req.body.region_id
+            const name = req.body.name
+
+            if(!regiond_id){
+                return res.status(400).json({
+                    message:"region id not found"
+                })
+            }
+
+            if(!name){
+                return res.status(400).json({
+                    message:"name is not found"
+                })
+            }
+
+          await regionModel.findByIdAndUpdate({_id:regiond_id},{name:name})
+       
+       
+          
+            return res.status(201).json({
+              message:"updated"
+            })
+       
+
+        }else{
+            return res.status(401).json({
+                message:"Anauthorize request"
+            })
+        }
+
+   
+
+        
+    } catch (error) {
+
+
+
+        
+        return res.status(500).json({
+            message:"Internal server error"
+        })
+    }
+}
 
 export const assignTopUniversity = async(req,res)=>{
     try {
@@ -1977,6 +2425,7 @@ export const SendMessage = async(req,res)=>{
             const sender_id = req.body.sender_id
             const reciever_id = req.body.reciever_id
             const message = req.body.message
+            
 
             
             if(!sender_id || !reciever_id || !message){
@@ -1984,6 +2433,10 @@ export const SendMessage = async(req,res)=>{
                     message:"invalid request"
                 })
             }
+
+
+            const user = await userModel.findById({_id:reciever_id})
+            const user_token = user.notification_token
 
             let room_id = ""
 
@@ -2023,9 +2476,53 @@ export const SendMessage = async(req,res)=>{
 
                 await newmessage.save()
 
-                return res.status(201).json({
-                    message:"message sent"
+
+
+
+                const notification = new notificationModel({
+                    title:"counselor send you a message ",
+                    body:message,
+                    notification_type:1,
+                    toUser:reciever_id
                 })
+
+                await notification.save()
+
+                const fcmUrl = 'https://fcm.googleapis.com/fcm/send';
+                const serverKey = process.env.SERVER_KEY;
+                const deviceToken = user_token;
+
+                
+              
+              
+              
+                const authorizationHeader = `key=${serverKey}`;
+              
+                const postData = {
+                  to: deviceToken,
+                  data: {
+                    title: 'counselor send you a message',
+                    body: message,
+                  },
+                };
+              
+                const headers = {
+                  'Authorization': `${authorizationHeader}`,
+                  'Content-Type': 'application/json',
+                };
+              
+                try {
+                  const response = await axios.post(fcmUrl, postData, { headers });
+                  return res.status(200).json({
+                    message:"message sent"
+                  })
+                 // console.log('FCM response:', response.data);
+                } catch (error) {
+                  return res.status(200).json({
+                    message:"error happened while sending notification"+error
+                  });
+                }
+              
 
               
 
@@ -2043,9 +2540,52 @@ export const SendMessage = async(req,res)=>{
 
             await newmessage.save()
 
-            return res.status(201).json({
-                message:"message sent"
+            const notification = new notificationModel({
+                title:"counselor send you a message ",
+                body:message,
+                notification_type:1,
+                toUser:reciever_id
             })
+
+            await notification.save()
+
+            const fcmUrl = 'https://fcm.googleapis.com/fcm/send';
+            const serverKey = process.env.SERVER_KEY;
+            const deviceToken = user_token;
+
+          //  console.log(deviceToken)
+
+            
+          
+          
+          
+            const authorizationHeader = `key=${serverKey}`;
+          
+            const postData = {
+              to: deviceToken,
+              data: {
+                title: 'counselor send you a message',
+                body: message,
+              },
+            };
+          
+            const headers = {
+              'Authorization': `${authorizationHeader}`,
+              'Content-Type': 'application/json',
+            };
+          
+            try {
+              const response = await axios.post(fcmUrl, postData, { headers });
+              return res.status(200).json({
+                message:"message sent"
+              })
+             // console.log('FCM response:', response.data);
+            } catch (error) {
+              return res.status(200).json({
+                message:"error happened while sending notification"+error
+              });
+            }
+          
             
 
 
@@ -2137,13 +2677,327 @@ export const GetChatRooms = async(req,res)=>{
 }
 
 
+export const SendNotificationToALL = async(req,res)=>{
+ 
+    try {
+
+        let token = req.userinfo
+        if(token.admin_type == 1){
+
+
+            const title = req.body.title
+            const message = req.body.message
+
+
+            if(!title || !message){
+                return res.status(400).json({
+                    message:"invalid request"
+                })
+            }
+
+
+            let tokens = []
+            let user_id = []
+
+            const find_all_user = await userModel.find()
+
+
+            for (let index = 0; index < find_all_user.length; index++) {
+                if(find_all_user[index].notification_token != null){
+
+                    tokens.push(find_all_user[index].notification_token)
+                    user_id.push(find_all_user[index]._id)
+
+                }
+                
+            }
+
+            const fcmUrl = 'https://fcm.googleapis.com/fcm/send';
+            const serverKey = process.env.SERVER_KEY;
+            const authorizationHeader = `key=${serverKey}`;
+
+           
+            
+              const headers = {
+                'Authorization': `${authorizationHeader}`,
+                'Content-Type': 'application/json',
+              };
+
+
+
+            for (let index = 0; index < tokens.length; index++) {
+
+                const postData = {
+                    to: tokens[index],
+                    data: {
+                      title: title,
+                      body: message,
+                    },
+                  };
+                try {
+                  await axios.post(fcmUrl, postData, { headers });
+                  
+                   // console.log('FCM response:', response.data);
+                  } catch (error) {
+                   
+                  }
+                
+                
+            }
+
+
+            for (let index = 0; index < user_id.length; index++) {
+                const notification = new notificationModel({
+                    title:"counselor send you a message ",
+                    body:message,
+                    notification_type:2,
+                    toUser:user_id[index]
+                })
+    
+                await notification.save()
+               
+                
+                
+            }
+
+
+            return res.status(200).json({
+                message:"notification sent to all"
+            })
+
+            
+
+     }else{
+            return res.status(401).json({
+                message:"Anauthorize request"
+            })
+        }
+
+      
+
+        
+    } catch (error) {
+        return res.status(500).json({
+            message:"Internal server error"+error
+        })
+    }
+
+}
+
+export const AddOperatingCity = async(req,res)=>{
+ 
+    try {
+
+        let token = req.userinfo
+        if(token.admin_type == 1){
+
+
+            const name = req.body.name
+            
+
+
+            if(!name){
+                return res.status(400).json({
+                    message:"name is required"
+                })
+            }
+
+
+            const city = new cityModel({
+                name:name
+            })
+
+
+            await city.save()
+
+
+                
+        return res.status(200).json({
+                message:"city added"
+            })
+
+            
+
+     }else{
+            return res.status(401).json({
+                message:"Anauthorize request"
+            })
+        }
+
+      
+
+        
+    } catch (error) {
+        return res.status(500).json({
+            message:"Internal server error"+error
+        })
+    }
+
+}
+
+
+export const AddNewsAndMedia = async(req,res)=>{
+ 
+    try {
+  
+        let token = req.userinfo
+        if(token.admin_type == 1){
+
+  
+  
+  
+          const image = req.files.image
+          const caption = req.body.caption
+        
+  
+          const randomname = Date.now() + '-'+image.name
+          const newpath =  path.join(process.cwd(),'news_image',randomname)
+          await image.mv(newpath)
+  
+  
+  
+            const apply = new newsandmediamodel({
+                 posted_by:req.userinfo._id,
+                post_image:randomname,
+                post_caption:caption,
+            
+            })
+  
+  
+            await apply.save()
+  
+            return res.status(201).json({
+              message:"news added"
+            })
+  
+  
+         }else{
+            return res.status(401).json({
+                message:"Anauthorize request"
+            })
+        }
+  
+      
+  
+        
+    } catch (error) {
+        return res.status(500).json({
+            message:"Internal server error"+error
+        })
+    }
+  
+  }
 
 
 
 
+  export const AddBlog = async(req,res)=>{
+ 
+    try {
+  
+        let token = req.userinfo
+        if(token.admin_type == 1){
+
+  
+  
+  
+          const image = req.files.image
+          const title = req.body.title
+          const desc = req.body.desc
+        
+  
+          const randomname = Date.now() + '-'+image.name
+          const newpath =  path.join(process.cwd(),'blog_image',randomname)
+          await image.mv(newpath)
+  
+  
+  
+            const apply = new blogmodel({
+                 posted_by:req.userinfo._id,
+                post_image:randomname,
+                post_title:title,
+                post_desc:desc
+            
+            })
+  
+  
+            await apply.save()
+  
+            return res.status(201).json({
+              message:"blog added"
+            })
+  
+  
+         }else{
+            return res.status(401).json({
+                message:"Anauthorize request"
+            })
+        }
+  
+      
+  
+        
+    } catch (error) {
+        return res.status(500).json({
+            message:"Internal server error"+error
+        })
+    }
+  
+  }
 
 
+  export const AddContactUs = async(req,res)=>{
+ 
+    try {
+  
+        let token = req.userinfo
+        if(token.admin_type == 1){
 
+  
+  
+    const name = req.body.name
+    const address = req.body.address
+    const toll_free = req.body.number
+        
+  
+         if(!name || !address || !toll_free){
+            return res.status(400).json({
+                message:"all field are required"
+            })
+         }
+
+  
+  
+           const apply =  new contactModel({
+            name:name,
+            address:address,
+            toll_free:toll_free
+           })
+  
+  
+            await apply.save()
+  
+            return res.status(201).json({
+              message:"contact added"
+            })
+  
+  
+         }else{
+            return res.status(401).json({
+                message:"Anauthorize request"
+            })
+        }
+  
+      
+  
+        
+    } catch (error) {
+        return res.status(500).json({
+            message:"Internal server error"+error
+        })
+    }
+  
+  }
 
 
 
